@@ -1,0 +1,56 @@
+version: '3.8'
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fantasyfusion_web
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+      - cache
+      - queue
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/fantasyfusion
+      REDIS_URL: redis://cache:6379
+      RABBITMQ_URL: amqp://queue
+      OPENAI_API_KEY: your-openai-api-key 
+    volumes:
+      - .:/usr/src/app
+
+  db:
+    image: postgres:15
+    container_name: fantasyfusion_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: fantasyfusion
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  cache:
+    image: redis:7
+    container_name: fantasyfusion_cache
+    restart: always
+    ports:
+      - "6379:6379"
+
+  queue:
+    image: rabbitmq:3-management
+    container_name: fantasyfusion_queue
+    restart: always
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+volumes:
+  postgres_data:
